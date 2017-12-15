@@ -1,5 +1,6 @@
 'use strict';
 
+// insert from another file or node_module
 
 
 
@@ -17,16 +18,16 @@ let sessionToken;
 
 const getInitialStore = function(){
   return {
-    page: 'intro',
+    page: 'intro', //render
     currentQuestionIndex: null,
-    userAnswers: [],
-    feedback: null,
-    sessionToken: null,
+    userAnswers: [], //template
+    feedback: null, //template
+    sessionToken: null,//api
   };
 };
 
 let store = getInitialStore();
-
+//let store = new Store();
 // Helper functions
 // ===============
 const hideAll = function() {
@@ -34,16 +35,28 @@ const hideAll = function() {
 };
 
 
-class Renderer {
-
-  constructor() {
-
+class Store = {
+  constructor(){
+    this.currentQuestionIndex = 0;
+    this.userAnswers = [];
   }
 
-  render () {
-
+  setCurrentQuestionIndex(input){
+    this.currentQuestionIndex = input;
   }
 
+  getCurrentQuestionIndex(){
+    return currentQuestionIndex;
+  }
+
+  setUserAnswers(input){
+    this.userAnswers.push(input);
+  }
+
+  getUserAnswers () {
+    return this.userAnswers;
+
+  }
 }
 
 //job: create html
@@ -134,14 +147,21 @@ class ApiCalls {
     this._sessionToken = "";
   }
 
+  setSessionToken(input) {
+    this.sessionToken = input;
+  }
+
+  getSessionToken() {
+    return this.sessionToken;
+  }
   //functions API_CALLS uses.
   buildBaseUrl(amt = 10, query = {}) {
     const url = new URL(BASE_API_URL + '/api.php');
     const queryKeys = Object.keys(query);
     url.searchParams.set('amount', amt);
 
-    if (sessionToken) {
-      url.searchParams.set('token', sessionToken);
+    if (this.getSessionToken()) {
+      url.searchParams.set('token', this.getSessionToken());
     }
 
     queryKeys.forEach(key => url.search);
@@ -152,7 +172,7 @@ class ApiCalls {
   }
 
   fetchToken(callback){
-    if (sessionToken) {
+    if (this.getSessionToken()) {
       return callback();
     }
 
@@ -160,36 +180,144 @@ class ApiCalls {
     url.searchParams.set('command', 'request');
 
     $.getJSON(url, res => {
-      sessionToken = res.token;
+      this.setSessionToken(res.token);
       callback();
     }, err => console.log(err));
   }
 
   fetchQuestions(amt, query, callback) {
-    $.getJSON(buildBaseUrl(amt, query), callback, err => console.log(err.message));
+    $.getJSON(this.buildBaseUrl(amt, query), callback, err => console.log(err.message));
   };
 
 }
 //constants
-ApiCalls.prototype.BASE_API_URL = "";
+ApiCalls.prototype.BASE_API_URL = "https://opentdb.com";
 
 class DomListeners {
-  constructor(api, renderer, store) {
-
+  constructor(Api, TemplateGenerator, Renderer, store) {
+    this.api = api;
+    this.TemplateGenerator = TemplateGenerator;
+    this.Renderer = Renderer;
+    this.store = store;
   }
+
+  handleStartQuiz() {
+    //store = getInitialStore();
+    Renderer.reset();
+    Renderer.setPage('question');
+    Renderer.setCurrentQuestionIndex(0);
+    const quantity = parseInt($('#js-question-quantity').find(':selected').val(), 10);
+    fetchAndSeedQuestions(quantity, { type: 'multiple' }, () => {
+    Renderer.render();
+    });
+  };
+
+  handleSubmitAnswer(e) {
+    e.preventDefault();
+    const question = getCurrentQuestion();
+    const selected = $('input:checked').val();
+    store.setUserAnswers(selected);
+
+    if (selected === question.correctAnswer) {
+      this.TemplateGenerator.feedback = 'You got it!';
+    } else {
+      this.TemplateGenerator.feedback = `Too bad! The correct answer was: ${question.correctAnswer}`;
+    }
+
+    Renderer.setPage('answer');
+    Renderer.render();
+  };
+
+  handleNextQuestion() {
+    if (store.currentQuestionIndex === QUESTIONS.length - 1) {
+      Renderer.setPage('outro');
+      Renderer.render();
+      return;
+    }
+
+    store.currentQuestionIndex++;
+    Renderer.setPage('question');
+    Renderer.render();
+  };
+
 }
 
 class Renderer {
-  constructor(TemplateGenerator, Store) {
+  constructor(Api, TemplateGenerator, page="intro") {
+    this.Api = Api;
+    this.TemplateGenerator = TemplateGenerator;
+    this.page = page;
 
+  }
+
+  setPage(input){
+    this.page = input;
+  }
+
+
+  getPage(){
+    return this.page;
+  }
+
+  hideAll(){
+      TOP_LEVEL_COMPONENTS.forEach(component => $(`.${component}`).hide());
+  }
+
+  reset() {
+    this.page="intro";
+
+  }
+  //insert hideAll
+  render() {
+    let html;
+    this.hideAll();
+
+    const { current, total } = getProgress();
+
+    $('.js-score').html(`<span>Score: ${getScore()}</span>`);
+    $('.js-progress').html(`<span>Question ${current} of ${total}`);
+
+    switch (this.page) {
+      case 'intro':
+        if (Api.sessionToken) {
+          $('.js-start').attr('disabled', false);
+        }
+
+        $('.js-intro').show();
+        break;
+
+      case 'question':
+        html = this.TemplateGenerator.generateQuestionHtml();
+        $('.js-question').html(html);
+        $('.js-question').show();
+        $('.quiz-status').show();
+        break;
+
+      case 'answer':
+        html = this.TemplateGenerator.generateFeedbackHtml();
+        $('.js-question-feedback').html(html);
+        $('.js-question-feedback').show();
+        $('.quiz-status').show();
+        break;
+
+      case 'outro':
+        $('.js-outro').show();
+        $('.quiz-status').show();
+        break;
+
+      default:
+        return;
+    }
   }
 }
 
-class Store {
-  constructor() {
-    
-  }
 }
+
+Renderer.prototype.TOP_LEVEL_COMPONENTS = [
+  'js-intro', 'js-question', 'js-question-feedback',
+  'js-outro', 'js-quiz-status'
+];
+
 const buildBaseUrl = function(amt = 10, query = {}) {
   const url = new URL(BASE_API_URL + '/api.php');
   const queryKeys = Object.keys(query);
@@ -255,7 +383,7 @@ const createQuestion = function(question) {
   };
 };
 
-const getScore = function() {
+const getScore = function(store) {
   return store.userAnswers.reduce((accumulator, userAnswer, index) => {
     const question = getQuestion(index);
 
@@ -267,14 +395,14 @@ const getScore = function() {
   }, 0);
 };
 
-const getProgress = function() {
+const getProgress = function(store) {
   return {
     current: store.currentQuestionIndex + 1,
     total: QUESTIONS.length
   };
 };
 
-const getCurrentQuestion = function() {
+const getCurrentQuestion = function(store) {
   return QUESTIONS[store.currentQuestionIndex];
 };
 
@@ -404,10 +532,11 @@ const handleNextQuestion = function() {
 
 // On DOM Ready, run render() and add event listeners
 $(() => {
-
-  let api = new ApiCalls;
+  let TemplateGenerator = new TemplateGenerator();
+  let Renderer = new Renderer();
+  let Api = new Api;
   // Run first render
-  render();
+  Renderer.render();
 
   // Fetch session token, re-render when complete
   api.fetchToken(() => {
