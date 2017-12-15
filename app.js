@@ -36,6 +36,13 @@ const hideAll = function() {
 
 class Renderer {
 
+  constructor() {
+
+  }
+
+  render () {
+
+  }
 
 }
 
@@ -48,9 +55,9 @@ generateQuestionHtml
 generateAnswerItemHtml
 
 */
-class createTemplate {
+class TemplateGenerator {
 
-    constructor(answer, question, feedback) {
+    constructor(answer = "", question = "", feedback = "") {
       this.answer = answer;
       this.question = question;
       this.feedback = feedback ;
@@ -70,14 +77,17 @@ class createTemplate {
 
     getAnswer() {
       console.log(this.answer);
+      return this;
     }
 
     getQuestion() {
       console.log(this.question);
+      return this.question;
     }
 
     getFeedback() {
       console.log(this.feedback);
+      return this.feedback;
     }
 
     generateAnswerItemHtml() {
@@ -113,7 +123,6 @@ class createTemplate {
         <button class="continue js-continue">Continue</button>
       `;
     };
-
 
 }
 
@@ -164,6 +173,23 @@ class ApiCalls {
 //constants
 ApiCalls.prototype.BASE_API_URL = "";
 
+class DomListeners {
+  constructor(api, renderer, store) {
+
+  }
+}
+
+class Renderer {
+  constructor(TemplateGenerator, Store) {
+
+  }
+}
+
+class Store {
+  constructor() {
+    
+  }
+}
 const buildBaseUrl = function(amt = 10, query = {}) {
   const url = new URL(BASE_API_URL + '/api.php');
   const queryKeys = Object.keys(query);
@@ -268,9 +294,7 @@ const generateAnswerItemHtml = function(answer) {
 };
 
 const generateQuestionHtml = function(question) {
-  const answers = question.answers
-    .map((answer, index) => generateAnswerItemHtml(answer, index))
-    .join('');
+  const answers = question.answers.map((answer, index) => generateAnswerItemHtml(answer, index)).join('');
 
   return `
     <form>
@@ -340,7 +364,7 @@ const render = function() {
 
 // Event handler functions
 // =======================
-const handleStartQuiz = function() {
+const handleStartQuiz = function(STORE) {
   store = getInitialStore();
   store.page = 'question';
   store.currentQuestionIndex = 0;
@@ -350,7 +374,7 @@ const handleStartQuiz = function() {
   });
 };
 
-const handleSubmitAnswer = function(e) {
+const handleSubmitAnswer = function(e, STORE) {
   e.preventDefault();
   const question = getCurrentQuestion();
   const selected = $('input:checked').val();
