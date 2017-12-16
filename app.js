@@ -3,17 +3,22 @@
 let QUESTIONS = [];
 
 class Store {
-  constructor(){
-    this.currentQuestionIndex = 0;
-    this.userAnswers = [];
+  constructor(currentQuestionIndex=0, userAnswers=[], answer = "", question = "", feedback = "", score=0){
+    this.currentQuestionIndex = currentQuestionIndex;
+    this.userAnswers = userAnswers;
+
+    this.answer = answer;
+    this.question = question;
+    this.feedback = feedback;
+    this.score = score;
   }
 
-  setCurrentQuestionIndex(input){
-    this.currentQuestionIndex = input;
+  incrementCurrentQuestionIndex(){
+    this.currentQuestionIndex++;
   }
 
   getCurrentQuestionIndex(){
-    return currentQuestionIndex;
+    return this.currentQuestionIndex;
   }
 
   setUserAnswers(input){
@@ -23,6 +28,50 @@ class Store {
   getUserAnswers () {
     return this.userAnswers;
 
+  }
+
+  setAnswer(input) {
+    this.answer = input;
+  }
+
+  setQuestion(input) {
+    this.question = input;
+  }
+
+  setFeedback(input) {
+    this.feedback = input;
+  }
+
+  getAnswer() {
+    //console.log(this.answer);
+    return this;
+  }
+
+  getQuestion() {
+    //console.log(this.question);
+    return this.question;
+  }
+
+  getFeedback() {
+    //console.log(this.feedback);
+    return this.feedback;
+  }
+
+  getScore() {
+    return this.score;
+  }
+
+  setScore(input){
+    this.score = input;
+  }
+  reset(currentQuestionIndex=0, userAnswers=[], answer = "", question = "", feedback = "", score=""){
+    this.currentQuestionIndex = currentQuestionIndex;
+    this.userAnswers = userAnswers;
+
+    this.answer = answer;
+    this.question = question;
+    this.feedback = feedback;
+    this.score = score;
   }
 }
 
@@ -37,59 +86,31 @@ generateAnswerItemHtml
 */
 class TemplateGenerator {
 
-    constructor(answer = "", question = "", feedback = "") {
-      this.answer = answer;
-      this.question = question;
-      this.feedback = feedback ;
+    constructor(store) {
+      this.store = store;
     }
 
-    setAnswer(input) {
-      this.answer = answer;
-    }
-
-    setQuestion(input) {
-      this.question = question;
-    }
-
-    setFeedback(input) {
-      this.feedback = feedback;
-    }
-
-    getAnswer() {
-      console.log(this.answer);
-      return this;
-    }
-
-    getQuestion() {
-      console.log(this.question);
-      return this.question;
-    }
-
-    getFeedback() {
-      console.log(this.feedback);
-      return this.feedback;
-    }
-
-    generateAnswerItemHtml() {
-      console.log("generateAnswerItemHtml");
+    generateAnswerItemHtml(answer, index) {
+      //console.log("generateAnswerItemHtml");
+      //console.log(answer);
+      //console.log();
       return `
         <li class="answer-item">
-          <input type="radio" name="answers" value="${this.answer}" />
-          <span class="answer-text">${this.answer}</span>
+          <input type="radio" name="answers" value="${answer}" />
+          <span class="answer-text">${answer}</span>
         </li>
       `;
     };
 
     generateQuestionHtml() {
-      console.log("generateQuestionHtml");
-      const answers = this.question.answers
-        .map((answer, index) => generateAnswerItemHtml(answer, index))
+      //console.log("generateQuestionHtml");
+      const answers = this.store.getQuestion().answers.map((answer, index) => this.generateAnswerItemHtml(answer, index))
         .join('');
 
       return `
         <form>
           <fieldset>
-            <legend class="question-text">${this.question.text}</legend>
+            <legend class="question-text">${ this.store.getQuestion().text }</legend>
               ${answers}
               <button type="submit">Submit</button>
           </fieldset>
@@ -100,7 +121,7 @@ class TemplateGenerator {
     generateFeedbackHtml() {
       return `
         <p>
-          ${this.feedback}
+          ${this.store.feedback}
         </p>
         <button class="continue js-continue">Continue</button>
       `;
@@ -125,18 +146,25 @@ class ApiCalls {
   }
   //functions API_CALLS uses.
   buildBaseUrl(amt = 10, query = {}) {
+    //console.log("buildBaseUrl");
     const url = new URL(this.BASE_API_URL + '/api.php');
     const queryKeys = Object.keys(query);
     url.searchParams.set('amount', amt);
+    url.searchParams.set('type', 'multiple');
 
     if (this.getSessionToken()) {
       url.searchParams.set('token', this.getSessionToken());
     }
 
-    queryKeys.forEach(key => url.search);
+    //queryKeys.forEach(key => url.search);
+    //console.log("url!!!");
+    //console.log(url);
+    //console.log(queryKeys);
+    return url;
   }
 
   buildTokenUrl(){
+    //console.log("buildTokenUrl");
     return new URL(this.BASE_API_URL + '/api_token.php');
   }
 
@@ -155,6 +183,7 @@ class ApiCalls {
   }
 
   fetchQuestions(amt, query, callback) {
+    //console.log("fetchQuestions");
     $.getJSON(this.buildBaseUrl(amt, query), callback, err => console.log(err.message));
   };
 
@@ -170,39 +199,46 @@ class DomListeners {
     this.Renderer = Renderer;
     this.store = store;
 
-    this.Renderer.setPage("BICH WORK.");
-    console.log(this.Renderer.getPage());
+    this.Renderer.setPage("fking WORK ALREADY DX D<");
+    //console.log(this.Renderer.getPage());
     this.Renderer.setPage("intro");
   }
 
-  startQuiz() {
-    console.log(this);
-    console.log(this.store);
-    console.log("~~~~");
-    //this.Renderer.setPage('question');
-    //this.Renderer.setCurrentQuestionIndex(0);
+  handleStartQuiz(){
+    //console.log(this);
+    //console.log(this.store);
+    //console.log("~~~~");
+    this.Renderer.setPage('question');
+    this.store.reset();
+    QUESTIONS = [];
+
     const quantity = parseInt($('#js-question-quantity').find(':selected').val(), 10);
     fetchAndSeedQuestions(quantity, { type: 'multiple' }, () => {
+
+    //console.log("callback?");
+    //console.log(this.store.getCurrentQuestionIndex());
+    this.store.setQuestion(QUESTIONS[this.store.getCurrentQuestionIndex()]);
+
+    //console.log(this.store.getQuestion());
+
+    this.store.setAnswer(this.store.getQuestion().answer);
+
     this.Renderer.render();
     });
-  }
-  handleStartQuiz(){
-    //store = getInitialStore();
-    //this.Renderer.reset();
-    console.log(this);
 
   }
 
-  handleSubmitAnswer(e) {
-    e.preventDefault();
-    const question = getCurrentQuestion();
+  handleSubmitAnswer() {
+
+    //console.log("submitAnswer");
+    const question = this.store.getQuestion();
     const selected = $('input:checked').val();
     this.store.setUserAnswers(selected);
 
     if (selected === question.correctAnswer) {
-      this.TemplateGenerator.feedback = 'You got it!';
+      this.store.feedback = 'You got it!';
     } else {
-      this.TemplateGenerator.feedback = `Too bad! The correct answer was: ${question.correctAnswer}`;
+      this.store.feedback = `Too bad! The correct answer was: ${question.correctAnswer}`;
     }
 
     this.Renderer.setPage('answer');
@@ -210,13 +246,20 @@ class DomListeners {
   };
 
   handleNextQuestion() {
-    if (store.currentQuestionIndex === QUESTIONS.length - 1) {
+    //console.log("handleNextQuestion");
+    //console.log(this.store.getCurrentQuestionIndex());
+    if (this.store.getCurrentQuestionIndex() === QUESTIONS.length - 1) {
       this.Renderer.setPage('outro');
       this.Renderer.render();
       return;
     }
 
-    this.store.currentQuestionIndex++;
+    this.store.incrementCurrentQuestionIndex();
+    this.store.setQuestion(QUESTIONS[this.store.getCurrentQuestionIndex()]);
+
+    //console.log(this.store.getQuestion());
+
+    this.store.setAnswer(this.store.getAnswer());
     this.Renderer.setPage('question');
     this.Renderer.render();
   };
@@ -230,7 +273,7 @@ class Renderer {
     this.store = store;
     this.page = page;
 
-    console.log(this.Api);
+    //console.log(this.Api);
   }
 
   setPage(input){
@@ -258,12 +301,14 @@ class Renderer {
 
     const { current, total } = getProgress(store);
 
-    $('.js-score').html(`<span>Score: ${getScore(store)}</span>`);
+
+    const accumalator = figureScore(this.store);
+
+    $('.js-score').html(`<span>Score: ${accumalator}</span>`);
     $('.js-progress').html(`<span>Question ${current} of ${total}`);
 
     switch (this.page) {
       case 'intro':
-      console.log(this.Api.getSessionToken());
         if (this.Api.getSessionToken()) {
           $('.js-start').attr('disabled', false);
         }
@@ -302,13 +347,27 @@ Renderer.prototype.TOP_LEVEL_COMPONENTS = [
   'js-outro', 'js-quiz-status'
 ];
 
+let store = new Store();
+let Api = new ApiCalls();
+let templateGen = new TemplateGenerator(store);
+let renderMachine = new Renderer(Api, templateGen, store);
+let domListener = new DomListeners(Api, templateGen, renderMachine, store);
 const seedQuestions = function(questions) {
-  QUESTIONS.length = 0;
-  questions.forEach(q => QUESTIONS.push(createQuestion(q)));
+  //console.log("seedQuestions");
+
+  questions.forEach(function (question) {
+    //console.log(question);
+    QUESTIONS.push(createQuestion(question));
+  });
+  //console.log("QUESTIONS");
+  //console.log(QUESTIONS);
 };
 
 const fetchAndSeedQuestions = function(amt, query, callback) {
-  fetchQuestions(amt, query, res => {
+  //console.log("fetchAndSeedQuestions");
+  Api.fetchQuestions(amt, query, res => {
+    //console.log("fetchQuestionsCallBack");
+    //console.log(res);
     seedQuestions(res.results);
     callback();
   });
@@ -317,6 +376,7 @@ const fetchAndSeedQuestions = function(amt, query, callback) {
 // Decorate API question object into our Quiz App question format
 const createQuestion = function(question) {
   // Copy incorrect_answers array into new all answers array
+  ////console.log(question.incorrect_answers);
   const answers = [ ...question.incorrect_answers ];
 
   // Pick random index from total answers length (incorrect_answers length + 1 correct_answer)
@@ -328,49 +388,53 @@ const createQuestion = function(question) {
   return {
     text: question.question,
     correctAnswer: question.correct_answer,
-    answers
+    answers: answers
   };
 };
 
-const getScore = function(store) {
-  return store.userAnswers.reduce((accumulator, userAnswer, index) => {
-    const question = getQuestion(index);
+const figureScore = function(store) {
 
-    if (question.correctAnswer === userAnswer) {
-      return accumulator + 1;
-    } else {
-      return accumulator;
+    const question = store.getQuestion();
+    const currentScore = store.getScore();
+    console.log(question.correctAnswer);
+    console.log(store.userAnswers);
+    if (store.getUserAnswers().length !== 0 ){
+      if (store.question.correctAnswer === store.getUserAnswers()[store.getCurrentQuestionIndex()]) {
+        console.log("BAM");
+        store.setScore(currentScore + 1);
+        return store.getScore();
+      }
     }
-  }, 0);
+
+      return currentScore;
+
+
 };
 
 const getProgress = function(store) {
   return {
-    current: store.currentQuestionIndex + 1,
+    current: store.getCurrentQuestionIndex()+1,
     total: QUESTIONS.length
   };
 };
 
-const getCurrentQuestion = function(store) {
-  return QUESTIONS[store.currentQuestionIndex];
-};
+// const getCurrentQuestion = function(store) {
+//   return QUESTIONS[store.currentQuestionIndex];
+// };
 
+//getQuestion is used for getScore
 const getQuestion = function(index) {
   return QUESTIONS[index];
 };
 
-
-let store = new Store();
-let Api = new ApiCalls();
-let templateGen = new TemplateGenerator();
-let renderMachine = new Renderer(Api, templateGen, store);
-let domListener = new DomListeners(Api, templateGen, renderMachine, store);
+//------------------
 
 const startQuiz = function () {
   domListener.handleStartQuiz();
 }
 
-const submitAnswer = function () {
+const submitAnswer = function (e) {
+  e.preventDefault();
   domListener.handleSubmitAnswer();
 }
 
@@ -389,5 +453,5 @@ $(() => {
 
   $('.js-intro, .js-outro').on('click', '.js-start', startQuiz);
   $('.js-question').on('submit', submitAnswer);
-  $('.js-question-feedback').on('click', '.js-continue', domListener.handleNextQuestion);
+  $('.js-question-feedback').on('click', '.js-continue', nextQuestion);
 });
