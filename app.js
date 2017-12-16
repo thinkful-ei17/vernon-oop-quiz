@@ -396,10 +396,13 @@ const figureScore = function(store) {
 
     const question = store.getQuestion();
     const currentScore = store.getScore();
+    const index = store.getCurrentQuestionIndex();
     console.log(question.correctAnswer);
     console.log(store.userAnswers);
-    if (store.getUserAnswers().length !== 0 ){
-      if (store.question.correctAnswer === store.getUserAnswers()[store.getCurrentQuestionIndex()]) {
+    console.log(QUESTIONS.length);
+    console.log(index);
+    if (store.getUserAnswers().length !== 0 && renderMachine.page != "outro"){
+      if (store.question.correctAnswer === store.getUserAnswers()[index]) {
         console.log("BAM");
         store.setScore(currentScore + 1);
         return store.getScore();
