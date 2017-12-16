@@ -64,7 +64,7 @@ class Store {
   setScore(input){
     this.score = input;
   }
-  reset(currentQuestionIndex=0, userAnswers=[], answer = "", question = "", feedback = "", score=""){
+  reset(currentQuestionIndex=0, userAnswers=[], answer = "", question = "", feedback = "", score=0){
     this.currentQuestionIndex = currentQuestionIndex;
     this.userAnswers = userAnswers;
 
