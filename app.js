@@ -191,7 +191,7 @@ class ApiCalls {
 //constants
 ApiCalls.prototype.BASE_API_URL = "https://opentdb.com";
 
-class DomListeners {
+class Handlers {
 
   constructor(Api, TemplateGenerator, Renderer, store) {
     this.Api = Api;
@@ -351,7 +351,8 @@ let store = new Store();
 let Api = new ApiCalls();
 let templateGen = new TemplateGenerator(store);
 let renderMachine = new Renderer(Api, templateGen, store);
-let domListener = new DomListeners(Api, templateGen, renderMachine, store);
+let MyHandlers = new Handlers(Api, templateGen, renderMachine, store);
+
 const seedQuestions = function(questions) {
   //console.log("seedQuestions");
 
@@ -421,10 +422,6 @@ const getProgress = function(store) {
   };
 };
 
-// const getCurrentQuestion = function(store) {
-//   return QUESTIONS[store.currentQuestionIndex];
-// };
-
 //getQuestion is used for getScore
 const getQuestion = function(index) {
   return QUESTIONS[index];
@@ -433,16 +430,16 @@ const getQuestion = function(index) {
 //------------------
 
 const startQuiz = function () {
-  domListener.handleStartQuiz();
+  MyHandlers.handleStartQuiz();
 }
 
 const submitAnswer = function (e) {
   e.preventDefault();
-  domListener.handleSubmitAnswer();
+  MyHandlers.handleSubmitAnswer();
 }
 
 const nextQuestion = function () {
-  domListener.handleNextQuestion();
+  MyHandlers.handleNextQuestion();
 }
 // On DOM Ready, run render() and add event listeners
 $(() => {
