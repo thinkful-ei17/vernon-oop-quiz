@@ -96,6 +96,7 @@ class TemplateGenerator {
       //console.log();
       return `
         <li class="answer-item">
+          <label for="possibleAnswer"></label>
           <input type="radio" name="answers" value="${answer}" required/>
           <span class="answer-text">${answer}</span>
         </li>
@@ -129,7 +130,7 @@ class TemplateGenerator {
 
 }
 
-//job of apicalls is to call our api
+//class that holds the "job of our api"
 class ApiCalls {
 
   //things i need
@@ -450,7 +451,7 @@ $(() => {
   Api.fetchToken(() => {
     renderMachine.render();
   });
-  //event list
+  //event listeners; way 2 small to put in a class.
   $('.js-intro, .js-outro').on('click', '.js-start', startQuiz);
   $('.js-question').on('submit', submitAnswer);
   $('.js-question-feedback').on('click', '.js-continue', nextQuestion);
