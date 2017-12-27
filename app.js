@@ -113,7 +113,7 @@ class TemplateGenerator {
           <fieldset>
             <legend class="question-text">${ this.store.getQuestion().text }</legend>
               ${answers}
-              <button type="submit">Submit</button>
+              <button aria-label="submit" type="submit">Submit</button>
           </fieldset>
         </form>
       `;
@@ -124,7 +124,7 @@ class TemplateGenerator {
         <p>
           ${this.store.feedback}
         </p>
-        <button class="continue js-continue">Continue</button>
+        <button aria-label="continue" class="continue js-continue">Continue</button>
       `;
     };
 
