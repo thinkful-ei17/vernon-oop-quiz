@@ -450,7 +450,7 @@ $(() => {
   Api.fetchToken(() => {
     renderMachine.render();
   });
-
+  //event listeners
   $('.js-intro, .js-outro').on('click', '.js-start', startQuiz);
   $('.js-question').on('submit', submitAnswer);
   $('.js-question-feedback').on('click', '.js-continue', nextQuestion);
