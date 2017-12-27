@@ -96,7 +96,7 @@ class TemplateGenerator {
       //console.log();
       return `
         <li class="answer-item">
-          <input type="radio" name="answers" value="${answer}" />
+          <input type="radio" name="answers" value="${answer}" required/>
           <span class="answer-text">${answer}</span>
         </li>
       `;
@@ -450,7 +450,7 @@ $(() => {
   Api.fetchToken(() => {
     renderMachine.render();
   });
-  //event listeners
+  //event list
   $('.js-intro, .js-outro').on('click', '.js-start', startQuiz);
   $('.js-question').on('submit', submitAnswer);
   $('.js-question-feedback').on('click', '.js-continue', nextQuestion);
